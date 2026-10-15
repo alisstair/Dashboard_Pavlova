@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru" data-light="normal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Дашборд дайвера</title>
+  <meta name="description" content="Дашборд дайвера: случайные морские обитатели (iNaturalist) и обстановка на точках погружения (Open-Meteo Marine).">
+
+  <!-- Шрифты с поддержкой кириллицы -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Handjet:wght@400;600&family=IBM+Plex+Mono:wght@400;600&family=Russo+One&display=swap">
+
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <div class="page">
+    <!-- Шапка пульта: табличка с названием, кнопки добавления и тумблер света -->
+    <header class="console">
+      <div class="nameplate">
+        <p class="nameplate__serial">Пульт ДП-1 · учебный проект</p>
+        <h1 class="nameplate__title">Дайв панель</h1>
+      </div>
+
+      <div class="console__controls">
+        <!-- Кнопки добавления виджетов. Тип виджета — в data-widget, обработчик в main.js.
+             fieldset + legend — группа органов управления, обведённая краской, как на пульте -->
+        <fieldset class="panel-group toolbar">
+          <legend class="panel-group__title">Добавить прибор</legend>
+          <button type="button" class="push" id="add-creature" data-widget="creature">
+            <span class="push__bezel" aria-hidden="true"><span class="push__cap"></span></span>
+            <span class="push__label"><span class="visually-hidden">Добавить </span>Сканер</span>
+          </button>
+          <button type="button" class="push" id="add-ocean" data-widget="ocean">
+            <span class="push__bezel" aria-hidden="true"><span class="push__cap"></span></span>
+            <span class="push__label"><span class="visually-hidden">Добавить </span>Обстановка</span>
+          </button>
+          <button type="button" class="push" id="add-wind" data-widget="wind">
+            <span class="push__bezel" aria-hidden="true"><span class="push__cap"></span></span>
+            <span class="push__label"><span class="visually-hidden">Добавить </span>Ветер</span>
+          </button>
+        </fieldset>
+
+        <!-- Тумблеры освещения и звука — у правого края панели.
+             role="switch" + aria-checked, чтобы экранный диктор понял, что это переключатель -->
+        <div class="console__switches">
+          <fieldset class="panel-group switch-field">
+            <legend class="panel-group__title">Освещение</legend>
+            <button type="button" class="toggle" id="light-switch" role="switch" aria-checked="false" aria-labelledby="light-label">
+              <span class="toggle__lever" aria-hidden="true"></span>
+            </button>
+            <span class="switch-field__label" id="light-label">Боевое</span>
+          </fieldset>
+
+          <fieldset class="panel-group switch-field">
+            <legend class="panel-group__title">Звук</legend>
+            <button type="button" class="toggle" id="sound-switch" role="switch" aria-checked="true" aria-labelledby="sound-label">
+              <span class="toggle__lever" aria-hidden="true"></span>
+            </button>
+            <span class="switch-field__label" id="sound-label">Щелчки и сонар</span>
+          </fieldset>
+        </div>
+      </div>
+    </header>
+
+    <!-- Сюда Dashboard добавляет виджеты -->
+    <main class="dashboard" id="dashboard" aria-label="Виджеты"></main>
+
+    <!-- Подсказка, если страницу открыли двойным щелчком: модули через file:// не работают -->
+    <script>
+      if (location.protocol === 'file:') {
+        const note = document.createElement('p');
+        note.className = 'dashboard__empty';
+        note.textContent = 'Страница открыта как файл (file://), а JS-модули так не загружаются. '
+          + 'Запустите локальный сервер в папке проекта (например, python -m http.server 8000) '
+          + 'и откройте http://localhost:8000. Подробнее — в README.';
+        document.querySelector('#dashboard').append(note);
+      }
+    </script>
+
+    <footer class="colophon">
+      <p>
+        Данные: <a class="link" href="https://www.inaturalist.org" target="_blank" rel="noopener">iNaturalist</a>
+        и <a class="link" href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine</a>.
+        Вердикт ориентировочный и не заменяет брифинг дайв-центра.
+      </p>
+    </footer>
+  </div>
+
+  <!-- Невидимая область: экранный диктор озвучивает добавление/удаление виджетов -->
+  <div class="visually-hidden" id="announcer" aria-live="polite"></div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

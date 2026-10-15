@@ -1,0 +1,650 @@
+/* =========================================================
+   Общие стили и сетка.
+   Направление: пульт старой подводной лодки. Корпус — крашеный
+   стальной лист с заклёпками, приборы — модули с гравированными
+   табличками и сигнальными лампами, данные — на зелёных ЭЛТ-экранах.
+   Тумблер «Боевое освещение» переводит рубку на красный свет.
+   ========================================================= */
+
+/* Раскладка: табличка-шильдик и кнопки сверху, ниже сетка приборов «кирпичиками» */
+:root {
+  /* Металл и краска */
+  --hull: #141812;          /* корпус (фон страницы) */
+  --plate: #4a5342;         /* крашеная панель прибора */
+  --plate-hi: rgba(255, 255, 255, 0.13); /* блик на кромке */
+  --plate-lo: rgba(0, 0, 0, 0.5);        /* тень на кромке */
+  --plate-edge: #0a0c08;    /* торец листа */
+  --plaque: #11130f;        /* чёрная табличка */
+  --engrave: #ece4ca;       /* гравировка на табличке */
+  --silk: #d8d1b6;          /* надписи краской по металлу */
+
+  /* Колпачки кнопок */
+  --cap: #a92e1d;
+  --cap-hi: #d24d36;
+  --cap-lo: #5e170d;
+  --key: #22251f;           /* чёрная клавиша */
+  --key-hi: #3a3e35;
+
+  /* ЭЛТ-экран */
+  --screen: #03110a;
+  --screen-hi: #0c2c18;
+  --phosphor: #8dffaa;      /* яркий люминофор */
+  --phosphor-dim: #52b670;  /* приглушённый */
+  --phosphor-faint: rgba(141, 255, 170, 0.16);
+  --glow: rgba(110, 255, 150, 0.55);
+  --alarm: #ffc24a;         /* тревога на зелёном экране — янтарём */
+  --photo-filter: grayscale(1) sepia(1) hue-rotate(95deg) saturate(2.6) brightness(0.85) contrast(1.15);
+
+  /* Шероховатость краски. --metal — текстура от WebGL-шейдера (js/metalTexture.js),
+     main.js подставляет её при загрузке. Пока её нет (или WebGL не работает),
+     используется запасной шум --grain из SVG-фильтра feTurbulence.
+     Обе текстуры серые и накладываются режимом overlay поверх цвета краски */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0.5 0.5 0.5 0 -0.25 0.5 0.5 0.5 0 -0.25 0.5 0.5 0.5 0 -0.25 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --metal: var(--grain);
+  --silk-line: rgba(216, 209, 182, 0.5); /* линии групп, нанесённые краской */
+
+  /* Лампы */
+  --lamp-green: #5dff7a;
+  --lamp-amber: #ffb020;
+  --lamp-red: #ff3b2b;
+
+  --focus: #ffcc33;
+
+  /* Шрифты: табличка, табло экрана, мелкий текст */
+  --font-plate: "Russo One", "Arial Black", sans-serif;
+  --font-display: "Handjet", "IBM Plex Mono", monospace;
+  --font-mono: "IBM Plex Mono", Consolas, ui-monospace, monospace;
+
+  --radius: 4px;
+  --gap: 1.25rem;
+  color-scheme: dark;
+}
+
+/* Боевое (красное) освещение: меняем только токены, компоненты не трогаем */
+:root[data-light="red"] {
+  --hull: #160b09;
+  --plate: #4b2c25;
+  --plaque: #130806;
+  --engrave: #ffcfc4;
+  --silk: #f0b7aa;
+  --silk-line: rgba(240, 183, 170, 0.5);
+  --key: #261612;
+  --key-hi: #432520;
+  --screen: #130403;
+  --screen-hi: #300b06;
+  --phosphor: #ff7058;
+  --phosphor-dim: #d0503f;
+  --phosphor-faint: rgba(255, 112, 88, 0.16);
+  --glow: rgba(255, 90, 60, 0.55);
+  --alarm: #ffd98a;
+  --photo-filter: grayscale(1) sepia(1) hue-rotate(-30deg) saturate(3.2) brightness(0.85) contrast(1.15);
+  --focus: #ffd98a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--silk);
+  background-color: var(--hull);
+  /* Корпус: стыки стальных листов и ряды заклёпок вдоль них */
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0 1.5px, rgba(0, 0, 0, 0.55) 2.5px, transparent 3.5px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0 2px, rgba(255, 255, 255, 0.05) 2px 3px, transparent 3px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.45) 0 2px, rgba(255, 255, 255, 0.04) 2px 3px, transparent 3px);
+  background-size: 32px 240px, 100% 240px, 480px 100%;
+  background-position: 8px 14px, 0 0, 0 0;
+  transition: background-color 0.5s;
+}
+
+/* Затемнение по углам, как в тесном отсеке под лампой */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 30%, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+img {
+  max-width: 100%;
+}
+
+/* Атрибут hidden должен прятать элемент, даже если у класса есть display: grid/flex */
+[hidden] {
+  display: none !important;
+}
+
+/* На телефонах при касании кнопки браузер рисует синюю вспышку — убираем,
+   у наших кнопок и так есть «нажатие» */
+button,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Видимая рамка фокуса для клавиатуры — жёлтая, как разметка опасной зоны */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Текст только для экранного диктора */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Каркас страницы ---------- */
+.page {
+  position: relative;
+  z-index: 1; /* поверх затемнения */
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 40px);
+  padding-block: 2rem 3rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* ---------- Шапка пульта ---------- */
+.console {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 1.25rem 2rem;
+}
+
+/* Табличка-шильдик: чёрная пластина с латунной рамкой и четырьмя винтами */
+.nameplate {
+  position: relative;
+  justify-self: start; /* табличка по размеру надписи, прижата влево */
+  padding: 1.1rem 2.25rem 1.2rem;
+  background: var(--plaque);
+  border: 2px solid #8a6d3e;
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 1px #000,
+    inset 0 1px 0 1px rgba(255, 255, 255, 0.06),
+    0 4px 0 var(--plate-edge),
+    0 10px 24px rgba(0, 0, 0, 0.6);
+  /* винты по углам */
+  background-image:
+    radial-gradient(circle at 12px 12px, #c9b07a 0 3px, #5a4524 4px, transparent 5px),
+    radial-gradient(circle at calc(100% - 12px) 12px, #c9b07a 0 3px, #5a4524 4px, transparent 5px),
+    radial-gradient(circle at 12px calc(100% - 12px), #c9b07a 0 3px, #5a4524 4px, transparent 5px),
+    radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), #c9b07a 0 3px, #5a4524 4px, transparent 5px);
+}
+
+.nameplate__serial {
+  margin: 0 0 0.375rem;
+  font: 600 0.6875rem/1 var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lamp-amber);
+}
+
+.nameplate__title {
+  margin: 0;
+  font-family: var(--font-plate);
+  font-weight: 400;
+  font-size: clamp(1.75rem, 3.5vw + 0.75rem, 3rem);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--engrave);
+  /* гравировка: светлый край снизу, тёмный сверху */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15), 0 -1px 0 #000;
+  text-wrap: balance;
+}
+
+.console__controls {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1rem 1.5rem;
+  padding: 0.75rem 1rem 1rem;
+  background-color: var(--plate);
+  background-image: var(--metal);
+  background-blend-mode: overlay;
+  border: 1px solid var(--plate-edge);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 var(--plate-hi), inset 0 -2px 0 var(--plate-lo), 0 5px 0 var(--plate-edge);
+}
+
+/* Группа органов управления: рамка, нанесённая краской, и название
+   прямо на линии рамки — так делают на настоящих пультах.
+   fieldset + legend рисуют это сами */
+.panel-group {
+  min-width: 0; /* fieldset по умолчанию не сжимается уже содержимого */
+  margin: 0;
+  padding: 0.6rem 1rem 0.75rem;
+  border: 2px solid var(--silk-line);
+  border-radius: 6px;
+}
+
+.panel-group__title {
+  padding: 0 0.5rem;
+  font: 400 0.6875rem/1 var(--font-plate);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--silk);
+}
+
+/* Кнопки добавления: в ряд, между ними вертикальные полосы краской */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 0.5rem;
+}
+
+.toolbar > .push + .push {
+  margin-left: 0.875rem;
+  padding-left: 1.125rem;
+  border-left: 2px solid var(--silk-line);
+}
+
+/* ---------- Конденсат на корпусе ---------- */
+/* Капли создаёт main.js. Капля сначала «набухает» (влага собирается),
+   потом становится тяжёлой и стекает вниз, оставляя мокрый след (::after).
+   После каждого цикла main.js переносит каплю в новое место */
+.drops {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.drop {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: calc(var(--size) * 1.15);
+  /* форма капли: низ тяжелее верха */
+  border-radius: 50% 50% 50% 50% / 45% 45% 55% 55%;
+  /* блик слева сверху + тёмный край — так вода выглядит выпуклой */
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.7) 0 10%, transparent 26%),
+    radial-gradient(circle at 50% 60%, rgba(200, 225, 215, 0.12), rgba(0, 0, 0, 0.35) 80%);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.6), inset 0 -1px 1px rgba(255, 255, 255, 0.25);
+  opacity: 0;
+  animation: drip var(--duration) var(--delay) ease-in infinite;
+}
+
+/* Мокрый след над каплей: растёт, пока капля едет вниз */
+.drop::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 70%;
+  width: 40%;
+  height: 0;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(to top, rgba(200, 225, 215, 0.22), rgba(200, 225, 215, 0.04));
+  animation: drip-trail var(--duration) var(--delay) ease-in infinite;
+}
+
+@keyframes drip {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.3);
+  }
+  12% {
+    opacity: 0.9;
+  }
+  55% {
+    transform: translateY(0) scale(1);
+  }
+  62% {
+    transform: translateY(6px) scale(1, 1.08);
+  }
+  88% {
+    opacity: 0.9;
+    transform: translateY(var(--run)) scale(0.9, 1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--run)) scale(0.8, 1.1);
+  }
+}
+
+@keyframes drip-trail {
+  0%, 58% {
+    height: 0;
+  }
+  88%, 100% {
+    height: var(--run);
+  }
+}
+
+/* ---------- Кнопки: механические клавиши с ходом ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 1.1rem;
+  font: 400 0.8125rem/1.1 var(--font-plate);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--engrave);
+  background: linear-gradient(to bottom, var(--key-hi), var(--key));
+  border: 1px solid #000;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 0 #000, 0 6px 10px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.06s, box-shadow 0.06s, filter 0.15s;
+}
+
+.btn:hover {
+  filter: brightness(1.15);
+}
+
+/* Нажатие: клавиша уходит вниз, тень почти исчезает */
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 0 #000, 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Круглая красная кнопка, как на пульте подлодки ---------- */
+/* Вся кнопка — один <button>: гнездо с колпачком и подпись справа.
+   Нажимать можно и на колпачок, и на подпись */
+.push {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.125rem;
+  font: 400 0.8125rem/1.1 var(--font-plate);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--engrave);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Гнездо: хромированное кольцо с чёрным углублением */
+.push__bezel {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, #050605 55%, #1d1f1a 72%);
+  box-shadow:
+    0 0 0 2px #a3a79b,
+    0 0 0 3px #3a3d36,
+    0 0 0 4px #000,
+    0 3px 6px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Колпачок: плоская красная площадка с тонким кантом по краю.
+   Почти не выступает из гнезда — тень «0 2px 0» даёт лишь тонкую боковину */
+.push__cap {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, #d23a24, #b92a17);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.25),
+    0 2px 0 #5a0f06;
+  transform: translateY(-1px);
+  transition: transform 0.06s, box-shadow 0.06s, filter 0.15s;
+}
+
+.push:hover .push__cap {
+  filter: brightness(1.15);
+}
+
+/* Нажатие: колпачок утапливается в гнездо и темнеет */
+.push:active .push__cap {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.3),
+    0 0 0 #5a0f06;
+  filter: brightness(0.85);
+}
+
+.link {
+  color: var(--engrave);
+  text-underline-offset: 0.2em;
+}
+
+/* ---------- Тумблер «Боевое освещение» ---------- */
+/* Тумблеры освещения и звука — у правого края панели */
+.console__switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.switch-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.switch-field__label {
+  min-width: 0;
+  overflow-wrap: break-word;
+  font: 400 0.75rem/1.2 var(--font-plate);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--silk);
+}
+
+/* Тумблер: чёрная пластина с надписями «ВКЛ» (::before) и «ВЫКЛ» (::after),
+   в центре хромированная гайка (radial-gradient), из неё торчит рычажок.
+   Включено — рычаг вверх, выключено — вниз. Подходит и для тумблеров в приборах */
+.toggle {
+  position: relative;
+  flex: none;
+  width: 2.75rem;
+  height: 4.75rem;
+  padding: 0;
+  background:
+    radial-gradient(circle closest-side, #e6e7e1 0 22%, #8c9087 32%, #3b3e38 44%, #0d0e0c 50%, transparent 54%) center / 1.6rem 1.6rem no-repeat,
+    linear-gradient(to bottom, #2a2d27, #181a16);
+  border: 1px solid #000;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 3px 0 #000,
+    0 5px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.toggle::before,
+.toggle::after {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: 600 0.5rem/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--silk);
+}
+
+.toggle::before {
+  content: "ВКЛ";
+  top: 4px;
+}
+
+.toggle::after {
+  content: "ВЫКЛ";
+  bottom: 4px;
+}
+
+/* Включено — надпись «ВКЛ» подсвечена */
+.toggle[aria-checked="true"]::before {
+  color: var(--lamp-amber);
+  text-shadow: 0 0 6px rgba(255, 176, 32, 0.8);
+}
+
+/* Рычаг: хромированный стержень, поворачивается вокруг нижнего конца (центр гайки) */
+.toggle__lever {
+  position: absolute;
+  left: calc(50% - 4px);
+  bottom: 50%;
+  width: 8px;
+  height: 1.25rem;
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(to right, #5d615a, #f4f4ef 40%, #a7aba2 65%, #3e413b);
+  transform-origin: 50% 100%;
+  transform: rotate(180deg); /* выключено — рычаг вниз */
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.7));
+  /* перекидывается с небольшим «перелётом», как пружинный тумблер */
+  transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+/* шарик на конце рычага */
+.toggle__lever::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #c3c6bd 35%, #6a6e66 75%, #2f312d);
+}
+
+.toggle[aria-checked="true"] .toggle__lever {
+  transform: rotate(0deg); /* включено — рычаг вверх */
+}
+
+/* ---------- Сетка приборов (CSS Grid) ---------- */
+/* Раскладка «кирпичиками»: строки по 1px, сколько строк занять — считает
+   Dashboard.js по высоте виджета. Поэтому отступ по вертикали задаёт JS,
+   а row-gap равен нулю. */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  grid-auto-rows: 1px;
+  column-gap: var(--gap);
+  row-gap: 0;
+  align-items: start;
+}
+
+.dashboard__empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  font-family: var(--font-plate);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--silk);
+  border: 2px dashed rgba(0, 0, 0, 0.6);
+  border-radius: var(--radius);
+}
+
+.colophon {
+  font-size: 0.8125rem;
+  color: var(--silk);
+}
+
+.colophon p {
+  margin: 0;
+  max-width: 72ch;
+}
+
+/* Узкий экран */
+@media (max-width: 640px) {
+  .console {
+    grid-template-columns: 1fr;
+  }
+
+  .console__controls {
+    padding: 0.5rem 0.625rem 0.75rem;
+  }
+
+  .panel-group {
+    padding: 0.5rem 0.625rem 0.625rem;
+  }
+
+  /* Три кнопки добавления в ряд: колпачок сверху, подпись под ним */
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .toolbar > .push {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  .toolbar > .push + .push {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 2px solid var(--silk-line);
+  }
+
+  /* Оба тумблера — рядом, поровну ширины */
+  .console__switches {
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* подпись — под тумблером, иначе два тумблера рядом не помещаются */
+  .console__switches .switch-field {
+    flex: 1;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: center;
+  }
+
+  .nameplate {
+    padding-inline: 1.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drops {
+    display: none;
+  }
+
+  .btn,
+  .push__cap,
+  .toggle__lever,
+  body {
+    transition: none;
+  }
+}
