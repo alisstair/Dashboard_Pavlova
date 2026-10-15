@@ -24,12 +24,13 @@ for (const button of document.querySelectorAll('[data-widget]')) {
   });
 }
 
-// Тумблеры в шапке. Каждый переключается по клику, запоминает положение
-// в localStorage и вызывает apply(включён ли он)
+// Тумблеры в шапке. Каждый переключается по клику и вызывает apply(включён ли он).
+// Если передан storageKey — положение запоминается в localStorage
 function setupSwitch(button, storageKey, defaultOn, apply) {
   function set(on) {
     button.setAttribute('aria-checked', String(on));
     apply(on);
+    if (!storageKey) return;
     try {
       localStorage.setItem(storageKey, on ? 'on' : 'off');
     } catch {
@@ -40,10 +41,12 @@ function setupSwitch(button, storageKey, defaultOn, apply) {
   button.addEventListener('click', () => set(button.getAttribute('aria-checked') !== 'true'));
 
   let saved = null;
-  try {
-    saved = localStorage.getItem(storageKey);
-  } catch {
-    // нет доступа к хранилищу — берём положение по умолчанию
+  if (storageKey) {
+    try {
+      saved = localStorage.getItem(storageKey);
+    } catch {
+      // нет доступа к хранилищу — берём положение по умолчанию
+    }
   }
   set(saved === null ? defaultOn : saved === 'on');
 }
@@ -54,8 +57,11 @@ setupSwitch(document.querySelector('#light-switch'), 'redLight', false, (on) => 
   document.documentElement.dataset.light = on ? 'red' : 'normal';
 });
 
-// «Звук»: щелчки кнопок и фоновый сонар (js/sound.js)
-setupSwitch(document.querySelector('#sound-switch'), 'sound', true, (on) => sound.setEnabled(on));
+// «Звук»: щелчки кнопок и фоновый сонар (js/sound.js).
+// При каждом заходе звук выключен и не запоминается: браузер всё равно не даёт
+// играть звук, пока человек ничего не нажал. Щелчок по тумблеру и есть такое
+// нажатие, поэтому звук начинает играть сразу, как только тумблер включили
+setupSwitch(document.querySelector('#sound-switch'), null, false, (on) => sound.setEnabled(on));
 
 // Браузер разрешает звук только после первого нажатия — «включаем» его тогда
 document.addEventListener('pointerdown', sound.unlock);
